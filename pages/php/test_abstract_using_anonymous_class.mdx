@@ -16,6 +16,24 @@ They can pass arguments through to their constructors, extend other classes, imp
 
 #### Example
 
-```php filename="abstractClass.php" {9} copy
-test
+Abstract base class that contains an unimplemented abstract method.
+
+```php filename="abstractClass.php" {3} copy
+abstract class AbstractClass
+{
+    public abstract function abstractMethod();
+}
+```
+
+Wrap the abstract method into an anonymous class for execution and testing.
+
+```php filename="test.php" {1} copy
+$anonymousClass = new class extends AbstractClass {
+    protected function abstractMethod()
+    {
+        return 'ok';
+    }
+};
+
+$anonymousClass->abstractMethod();
 ```
