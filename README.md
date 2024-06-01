@@ -6,7 +6,7 @@ GeorgII-web IT articles and notes
 
 First, run `npm install` to install the dependencies.
 
-Then, run `next dev` to start the development server and visit localhost:3000.
+Then, run `next dev` to start the development server and visit http://localhost:3000/notes.
 
 ## License
 

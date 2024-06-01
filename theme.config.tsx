@@ -6,7 +6,7 @@ const config: DocsThemeConfig = {
     project: {
         link: 'https://github.com/GeorgII-web/notes',
     },
-    docsRepositoryBase: 'https://github.com/GeorgII-web/notes/edit/main/',
+    docsRepositoryBase: 'https://github.com/GeorgII-web/notes/blob/master/',
     footer: {
         text: 'github.com/GeorgII-web | t.me/GeorgiiW',
     },
