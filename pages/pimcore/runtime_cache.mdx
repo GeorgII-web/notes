@@ -1,0 +1,120 @@
+# Pimcore RuntimeCache
+
+### TL;DR
+
+Use `RuntimeCache::clear();` periodically to prevent running out of RAM.
+
+### What is it?
+
+The application stores all of its data objects in memory for quick access, in what it calls the 'Runtime Cache'.
+
+For example, when you run a query to find an object, it will first check if that object is already cached in memory before having to access the database. If it's there, it can return it immediately without the extra step of querying the database.
+
+If the object isn't cached yet, it will retrieve it from the database and add it to the cache for future reference. Any subsequent queries for that same object will then get it directly from the faster memory cache instead of hitting the database again.
+
+The potential issue is that storing too many objects in the cache over time can cause memory usage to grow huge. For long-running processes that load a lot of data, like an import or export, the cache size could exceed available memory on the server.
+
+So you need to keep an eye on memory consumption during those types of operations. The application may need periodic cache clearing to avoid running out of RAM if handling extremely large data sets.
+
+### How to use it
+
+Use Runtime cache [clearing](https://github.com/pimcore/pimcore/blob/2b3bb4d10f4c32270589bb37557b932ca38d2a7e/lib/Cache/RuntimeCache.php#L196) periodically in your script.
+
+This command will delete all DataObjects from memory and reduce memory usage.
+
+```php
+RuntimeCache::clear();
+```
+
+This command will disable Runtime cache and will prevent adding new DataObjects to memory.
+
+```php
+RuntimeCache::disable();
+```
+
+### Possible issues
+
+#### Slowing down with no cache
+
+Using `RuntimeCache::disable();` you'll force Pimcore to use a database for each DataObject request, it could slow down your script dramatically.
+
+Try to split types of data you're working with and disable Runtime cache only for a specific types of data.
+
+For example, on importing Products, before start, get & cache all the secondary objects like vendors, manufacturers, etc., then disable cache and start loop for importing Products.
+
+#### Cache isn't cleared
+
+Use batches for a big amount of data.
+
+1. For large exports, loading all records at once into memory cache causes it to fill up fast. Clearing cache alone doesn't help, since objects stay in arrays. Instead, load records in batches and clear cache after each batch to continuously free up space. This prevents memory overload when exporting big datasets.
+
+```php filename="export.php" {13} copy
+private function getProducts(float|int $offset, float|int $size): Product\Listing
+{
+    $products = new Product\Listing();
+    $products->setOffset($offset);
+    $products->setLimit($size);
+    $products->load();
+
+    return $products;
+}
+
+$offset= 0;
+$size = 1000;
+while ($products = getProducts($offset, $size)) {
+    foreach ($products as $row) {
+        // save an object to CSV
+        RuntimeCache::clear();
+    }
+    $offset = $offset + $size;
+}
+```
+
+2. When importing large data sets, it's best to process items in batches rather than all at once.
+
+Loading everything together can overload memory. Instead, import chunks of records sequentially and clear cache between each batch.
+
+For a CSV it could be `yield` [Generator](https://www.php.net/manual/en/language.generators.syntax.php).
+
+```php filename="import.php" {5} copy
+public function readCsvFileYield(): Generator
+{
+    $handle = fopen('products.csv', 'r');
+    while (($data = fgetcsv($handle, 0, ';', '"', '"')) !== false) {
+        yield $data;
+    }
+    fclose($handle);
+}
+
+foreach (readCsvFileYield() as $row) {
+    // create an object from row array
+    RuntimeCache::clear();
+}
+```
+
+### Usage examples
+
+#### Simple clearing
+
+after each iteration on import.
+
+```php filename="import.php" {3} copy
+foreach ($csvRows as $row) {
+    // create an object from row array
+    RuntimeCache::clear();
+}
+```
+
+#### Smart clearing
+
+after each 1000 iterations to reduce amount of clearing.
+
+```php filename="import.php" {4} copy
+foreach ($csvRows as $row) {
+    // create an object from row array
+    if ($i % 1000 === 0) {
+        RuntimeCache::clear();
+    }
+}
+```
+

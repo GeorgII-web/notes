@@ -1,0 +1,25 @@
+# Pimcore manual events trigger
+
+### TL;DR
+
+Trigger DataObject [event](https://github.com/pimcore/pimcore/blob/2b3bb4d10f4c32270589bb37557b932ca38d2a7e/models/DataObject/AbstractObject.php#L271) manually by `Pimcore::getEventDispatcher()->dispatch(pim_event, event_type)`.
+
+### Example
+
+After the import, you may need to trigger events manually for all objects, like this
+
+```php filename="afterImportTriggers.php" {9} copy
+use Pimcore;
+use Pimcore\Event\DataObjectEvents;
+use Pimcore\Event\Model\DataObjectEvent;
+
+$products = new Product\Listing();
+$products->load();
+
+foreach ($products as $i => $product) {
+    Pimcore::getEventDispatcher()->dispatch(
+        new DataObjectEvent($product),
+        DataObjectEvents::POST_UPDATE
+    );
+}
+```

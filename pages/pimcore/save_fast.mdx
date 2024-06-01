@@ -1,0 +1,124 @@
+# Pimcore save object fast
+
+### TL;DR
+Create a custom method for objects `saveFast();` to avoid triggering events, only storing to DB, which is faster.
+
+### What is it?
+In some situations, like when first setting up a new database, we need to quickly add a large number of records without triggering any automatic processes.
+
+This custom 'save' method is modeled after the [standard](https://github.com/pimcore/pimcore/blob/2b3bb4d10f4c32270589bb37557b932ca38d2a7e/models/DataObject/AbstractObject.php#L507) one but runs quicker. It skips the usual checks, alerts and index updates that occur each time a record is changed.
+
+By default, adding records normally fires off security validations, notification emails and updates to the search indexes. For a big initial load of data though, bypassing all that extra processing helps speed things up significantly.
+
+Just be aware that after the import is finished, you'll likely need to [manually kick off](./trigger_events) those standard post-save actions like re-indexing the database, etc.
+
+### Save fast trait
+
+Create a trait for this method
+
+```php filename="ObjectSaveFastTrait.php" {15} copy
+<?php
+
+declare(strict_types=1);
+
+namespace App\Trait;
+
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Exception;
+use Pimcore\Logger;
+use Pimcore\Model\Element\ValidationException;
+use Throwable;
+
+use function in_array;
+
+trait ObjectSaveFastTrait
+{
+    /**
+     * Fast save method, which does not trigger any events, does not check permissions and does not update the index.
+     *
+     * @return $this
+     *
+     * @throws Throwable
+     * @throws ValidationException
+     * @throws \Pimcore\Model\Element\DuplicateFullPathException
+     */
+    public function saveFast(array $parameters = []): static
+    {
+        self::setHideUnpublished(false);
+
+        $isUpdate = false;
+
+        try {
+            if ($this->getId()) {
+                $isUpdate = true;
+            }
+
+            $this->beginTransaction();
+
+            try {
+                if (!in_array($this->getType(), self::$types, true)) {
+                    throw new Exception('invalid object type given: ['.$this->getType().']');
+                }
+
+                $this->correctPath();
+
+                if (!$isUpdate) {
+                    $this->getDao()->create();
+                }
+
+                $this->update($isUpdate, $parameters);
+
+                $this->commit();
+            } catch (Exception $e) {
+                try {
+                    $this->rollBack();
+                } catch (Exception $er) {
+                    // PDO adapter throws exceptions if rollback fails
+                    Logger::info((string) $er);
+                }
+
+                if ($e instanceof UniqueConstraintViolationException) {
+                    throw new ValidationException('unique constraint violation', 0, $e);
+                }
+
+                throw $e;
+            }
+
+            return $this;
+        } catch (Throwable $e) {
+            throw $e;
+        }
+    }
+}
+```
+
+### Create an extended object
+
+Use trait in a new custom object
+
+```php filename="ProductModel.php" {12} copy
+<?php
+
+declare(strict_types=1);
+
+namespace App\Model\DataObject;
+
+use App\Trait\ObjectSaveFastTrait;
+use Pimcore;
+
+class Product extends Pimcore\Model\DataObject\Product
+{
+    use ObjectSaveFastTrait;
+}
+```
+
+### Use new method
+
+Use trait in a new custom object
+
+```php filename="ProductModel.php" {4} copy
+$product = new \App\Model\DataObject\Product();
+$product->setTitle('Unique title');
+//$product->save();
+$product->saveFast();
+```

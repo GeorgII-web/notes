@@ -1,0 +1,10 @@
+{
+  "index": "Introduction",
+  "pimcore": "Pimcore",
+  "contact": {
+    "title": "Contact ↗",
+    "type": "page",
+    "href": "https://t.me/GeorgiiW",
+    "newWindow": true
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "georgii-web-notes",
+  "version": "1.0.3",
+  "description": "GeorgII-web IT notes",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/GeorgII-web/notes/issues"
+  },
+  "homepage": "https://github.com/GeorgII-web/notes#readme",
+  "dependencies": {
+    "next": "^14.2.3",
+    "nextra": "latest",
+    "nextra-theme-docs": "latest",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "18.11.10",
+    "typescript": "^4.9.5"
+  }
+}
