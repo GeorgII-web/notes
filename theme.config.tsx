@@ -7,10 +7,13 @@ const config: DocsThemeConfig = {
         link: 'https://github.com/GeorgII-web/notes',
     },
     docsRepositoryBase: 'https://github.com/GeorgII-web/notes/blob/master/',
+    head: <>
+        <meta name="description" content="IT notes and articles on PHP, Symfony, Pimcore and related topics."/>
+    </>,
     footer: {
-        text: 'github.com/GeorgII-web | t.me/GeorgiiW',
+        text: <p>github.com/GeorgII-web | t.me/GeorgiiW</p>,
     },
-    gitTimestamp: ''
+    gitTimestamp: '',
 }
 
 export default config
