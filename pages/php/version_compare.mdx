@@ -1,0 +1,31 @@
+# Version compare
+
+### TL;DR
+
+Use a builtin function from the [manual](https://www.php.net/manual/en/function.version-compare.php)
+
+```php filename="compare.php" {1} copy
+version_compare('1.0.1', '1.0.0')
+```
+
+### What is it?
+
+Software versioning, typically following the Semantic Versioning system and it involves three components: MAJOR, MINOR, and PATCH.
+
+For every new release, one of these components is incremented.
+
+In a practice, it could be useful to check system requirements, like package or PHP version of an environment.
+Even more, compatibility of Front- and Back-end could be validated, like, checking the minimum compatible front-end version from a request.
+
+### Example
+
+Checkin minimum PHP version.
+
+```php filename="comapre.php" {4} copy
+$version = phpversion();
+echo $version . PHP_EOL;
+$min_version = "8.2.1";
+if (version_compare($version, $min_version) < 0) {
+    throw new RuntimeException('You have an old PHP version');
+}
+```
