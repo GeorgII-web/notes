@@ -10,6 +10,7 @@ const config: DocsThemeConfig = {
     head: <>
         <meta name="description" content="IT notes and articles on PHP, Symfony, Pimcore and related topics."/>
         <meta name="google-site-verification" content="JKtg18pK8fbTGPfTZKJ5B3N-Mn6rMX1636TpJAWFbs8"/>
+        <meta name="yandex-verification" content="24d8ee67a7f1f619"/>
     </>,
     footer: {
         text: <p>github.com/GeorgII-web | t.me/GeorgiiW</p>,
