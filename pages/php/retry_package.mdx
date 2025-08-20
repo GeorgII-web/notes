@@ -1,0 +1,45 @@
+# Retry — Quick Guide
+
+A tiny PHP helper to wrap any callable with a retry algorithm. It helps you handle transient failures (like flaky network or temporary DB issues) by retrying your code a few times before giving up.
+
+Source code: https://github.com/GeorgII-web/Retry
+
+## Basic usage
+
+```php
+use GeorgII\Retry;
+
+// Retry on any exception (default settings)
+$result = Retry::onAnyException(fn () => someOperation());
+```
+
+## With options
+
+```php
+use GeorgII\Retry;
+use GeorgII\Event\RetryEvent;
+
+$result = Retry::onAnyException(
+    attemptCallback: function (RetryEvent $event) {
+        return someOperation($event);
+    },
+    retryCount: 3,      // how many times to retry
+    retryDelay: 0.2,    // seconds between attempts (can be a Closure for backoff)
+    eventCallback: function (RetryEvent $event) {
+        // observe events if you need
+        // var_dump($event->getName(), $event->getAttempt());
+    }
+);
+```
+
+## Using your own alias (example)
+
+If you commonly retry specific exceptions, wrap them in an alias in your project and call it directly:
+
+```php
+use GeorgII\Retry;
+
+$users = Retry::onDbException(fn () => $sql->query('SELECT * FROM users'));
+```
+
+That's it — simple, small, and focused on retriable errors only.
